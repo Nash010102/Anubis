@@ -1,0 +1,1260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pyramid of Anubis — Escape the Cursed Tomb</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Cinzel+Decorative:wght@700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#08060a;--bg2:#110e08;--gold:#c89020;--gl:#e8c060;--gd:#8a6010;--tx:#d4c098;--td:#7a6848;--rb:#cc2a2a;--sb:#c4a060;--pb:#9060cc;--gb:#40c060;}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--tx);font-family:'Cinzel',Georgia,serif;}
+
+/* ── INTRO ── */
+#intro{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#000;z-index:1000;text-align:center;overflow:hidden;}
+.sand-p{position:absolute;width:2px;height:2px;background:var(--sb);border-radius:50%;pointer-events:none;animation:fall linear infinite;}
+@keyframes fall{from{transform:translateY(-10px);opacity:.8;}to{transform:translateY(100vh);opacity:0;}}
+.intro-eye{font-size:70px;margin-bottom:18px;animation:pulse 2.5s ease-in-out infinite;}
+.intro-title{font-family:'Cinzel Decorative',serif;font-size:clamp(24px,4.5vw,50px);color:var(--gold);text-shadow:0 0 30px rgba(200,144,26,.8);letter-spacing:4px;margin-bottom:8px;}
+.intro-sub{font-size:12px;color:var(--td);letter-spacing:3px;text-transform:uppercase;margin-bottom:36px;}
+.voice-box{max-width:480px;padding:18px 28px;border:1px solid var(--gd);background:rgba(200,144,26,.05);font-style:italic;font-size:14px;line-height:1.9;margin-bottom:36px;position:relative;}
+.voice-box::before{content:'"';font-size:56px;color:var(--gd);position:absolute;top:-12px;left:8px;font-family:Georgia,serif;}
+#start-btn{background:transparent;border:2px solid var(--gold);color:var(--gold);font-family:'Cinzel',serif;font-size:15px;letter-spacing:3px;padding:13px 38px;cursor:pointer;text-transform:uppercase;transition:all .3s;position:relative;overflow:hidden;}
+#start-btn::before{content:'';position:absolute;inset:0;background:var(--gold);transform:translateX(-100%);transition:transform .3s;z-index:-1;}
+#start-btn:hover{color:#000;}
+#start-btn:hover::before{transform:translateX(0);}
+
+/* ── GAME ── */
+#game{display:none;flex-direction:column;width:100%;height:100%;}
+#header{display:flex;align-items:center;justify-content:space-between;padding:8px 18px;background:linear-gradient(180deg,#000 0%,var(--bg2) 100%);border-bottom:1px solid var(--gd);flex-shrink:0;}
+.h-title{font-family:'Cinzel Decorative',serif;font-size:16px;color:var(--gold);letter-spacing:2px;}
+.h-timer-wrap{text-align:center;}
+.h-timer-lbl{font-size:9px;letter-spacing:2px;color:var(--td);text-transform:uppercase;}
+#timer-display{font-size:28px;font-weight:900;color:var(--gold);font-variant-numeric:tabular-nums;text-shadow:0 0 10px rgba(200,144,26,.5);transition:color .3s;}
+#timer-display.warning{color:#e07020;}
+#timer-display.urgent{color:var(--rb);text-shadow:0 0 12px rgba(204,42,42,.8);animation:tpulse 1s ease-in-out infinite;}
+@keyframes tpulse{0%,100%{opacity:1;}50%{opacity:.4;}}
+.h-info{font-size:11px;color:var(--td);text-align:right;line-height:1.6;}
+.h-info span{color:var(--rb);}
+#main-layout{display:flex;flex:1;overflow:hidden;}
+#room-panel{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+#room-header{padding:10px 18px 8px;border-bottom:1px solid rgba(200,144,26,.18);flex-shrink:0;}
+#room-name{font-size:19px;font-weight:700;color:var(--gl);letter-spacing:2px;text-transform:uppercase;}
+#room-atmos{font-size:11px;color:var(--td);font-style:italic;margin-top:3px;letter-spacing:.5px;}
+#room-content{flex:1;padding:14px 18px;overflow-y:auto;}
+#msg-log{flex-shrink:0;height:90px;overflow-y:auto;padding:6px 18px;border-top:1px solid rgba(200,144,26,.12);background:rgba(0,0,0,.35);}
+.msg{font-size:12px;padding:3px 0;border-bottom:1px solid rgba(200,144,26,.07);line-height:1.5;}
+.msg:last-child{border-bottom:none;}
+.msg-info{color:var(--tx);}
+.msg-important{color:var(--gl);}
+.msg-danger{color:var(--rb);}
+.msg-curse{color:var(--pb);font-style:italic;}
+.msg-success{color:var(--gb);font-weight:700;}
+#sidebar{width:210px;flex-shrink:0;border-left:1px solid var(--gd);display:flex;flex-direction:column;overflow:hidden;background:var(--bg2);}
+.sb-sec{padding:12px;border-bottom:1px solid rgba(200,144,26,.18);}
+.sb-title{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--gd);margin-bottom:8px;}
+#seals-list{display:flex;flex-direction:column;gap:5px;}
+.seal-slot{display:flex;align-items:center;gap:7px;padding:5px 8px;border:1px solid rgba(200,144,26,.12);font-size:11px;color:var(--td);transition:all .3s;}
+.seal-slot.seal-got{border-color:var(--pb);color:var(--gl);background:rgba(90,40,180,.1);box-shadow:0 0 8px rgba(90,40,180,.2);}
+.seal-slot .si{font-size:15px;}
+.seal-slot:not(.seal-got) .si{filter:grayscale(1) opacity(.25);}
+#clues-wrap{flex:1;overflow:hidden;display:flex;flex-direction:column;padding:12px 12px 0;}
+.sb-title2{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--gd);margin-bottom:8px;flex-shrink:0;}
+#clues-list{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:0;padding-bottom:12px;}
+.no-clues{font-size:11px;color:var(--td);font-style:italic;}
+.clue-item{display:flex;align-items:flex-start;gap:6px;padding:6px 0;border-bottom:1px solid rgba(200,144,26,.08);font-size:11px;color:var(--td);line-height:1.5;}
+.clue-item.clue-key{color:var(--sb);}
+.clue-item.clue-new{color:var(--gl);animation:fadeIn .6s;}
+.clue-icon{flex-shrink:0;font-size:13px;}
+@keyframes fadeIn{from{opacity:0;transform:translateX(8px);}to{opacity:1;transform:translateX(0);}}
+#nav-bar{display:flex;gap:2px;padding:7px 8px;background:linear-gradient(0deg,#000 0%,var(--bg2) 100%);border-top:1px solid var(--gd);flex-shrink:0;}
+.nav-btn{flex:1;background:rgba(200,144,26,.05);border:1px solid rgba(200,144,26,.18);color:var(--td);font-family:'Cinzel',serif;font-size:10px;padding:7px 2px;cursor:pointer;text-align:center;letter-spacing:.3px;transition:all .2s;}
+.nav-btn:hover:not(:disabled){background:rgba(200,144,26,.13);color:var(--gold);border-color:var(--gd);}
+.nav-btn.active{background:rgba(200,144,26,.11);border-color:var(--gold);color:var(--gl);}
+.nav-btn:disabled{opacity:.3;cursor:not-allowed;}
+.nav-btn .ni{display:block;font-size:15px;margin-bottom:2px;}
+.nav-btn .nl{font-size:8px;text-transform:uppercase;letter-spacing:.8px;}
+.nav-btn.locked-nav{border-color:rgba(90,40,180,.25);color:rgba(90,40,180,.4);}
+.nav-btn.unlocked-nav{border-color:var(--pb);color:var(--pb);box-shadow:0 0 8px rgba(90,40,180,.3);animation:sanpulse 2s ease-in-out infinite;}
+@keyframes sanpulse{0%,100%{box-shadow:0 0 6px rgba(90,40,180,.3);}50%{box-shadow:0 0 18px rgba(90,40,180,.6);}}
+
+/* ── ROOM CONTENT COMMON ── */
+.obj-grid{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;}
+.obj-btn{background:rgba(200,144,26,.05);border:1px solid rgba(200,144,26,.22);color:var(--tx);font-family:'Cinzel',serif;font-size:12px;padding:9px 14px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;min-width:82px;text-align:center;transition:all .2s;}
+.obj-btn:hover{background:rgba(200,144,26,.14);border-color:var(--gold);color:var(--gl);transform:translateY(-1px);}
+.obj-btn.obj-visited{border-color:rgba(200,144,26,.4);background:rgba(200,144,26,.08);}
+.obj-btn.obj-glow{box-shadow:0 0 10px rgba(200,144,26,.35);}
+.obj-icon{font-size:22px;line-height:1;}
+.obj-name{font-size:9px;letter-spacing:1px;text-transform:uppercase;}
+.inscription{background:rgba(200,144,26,.04);border-left:3px solid var(--gd);padding:9px 12px;font-style:italic;font-size:13px;color:var(--sb);margin:9px 0;letter-spacing:.4px;line-height:1.7;}
+.insc-label{font-size:9px;letter-spacing:2px;color:var(--td);text-transform:uppercase;margin-bottom:4px;font-style:normal;}
+.divider{border:none;border-top:1px solid rgba(200,144,26,.1);margin:10px 0;}
+.room-hint{font-size:11px;color:var(--td);font-style:italic;margin-bottom:8px;line-height:1.5;}
+.action-btn{background:rgba(200,144,26,.1);border:1px solid var(--gd);color:var(--tx);font-family:'Cinzel',serif;font-size:12px;padding:7px 18px;cursor:pointer;letter-spacing:1px;transition:all .2s;margin-top:8px;display:inline-block;}
+.action-btn:hover{background:rgba(200,144,26,.2);color:var(--gold);border-color:var(--gold);}
+
+/* ── BURIAL ── */
+.sarc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:480px;}
+.sarc{background:rgba(30,20,10,.8);border:1px solid rgba(200,144,26,.2);padding:11px 8px;cursor:pointer;text-align:center;transition:all .2s;position:relative;}
+.sarc:hover{border-color:var(--gd);background:rgba(50,35,15,.8);}
+.sarc.sarc-east{border-color:var(--gb);box-shadow:0 0 10px rgba(64,192,96,.25);}
+.sarc-sym{font-size:26px;display:block;margin-bottom:3px;}
+.sarc-name{font-size:9px;color:var(--td);text-transform:uppercase;letter-spacing:1px;}
+.sarc-arrow{font-size:20px;display:block;margin:4px 0;transition:color .3s;}
+.sarc-dir-text{font-size:9px;color:var(--td);}
+.sarc-hint{font-size:8px;color:var(--td);opacity:.6;margin-top:3px;display:block;}
+.burial-progress{font-size:12px;color:var(--td);margin:8px 0;font-style:italic;}
+
+/* ── PRIEST ── */
+.scroll-list{display:flex;flex-direction:column;gap:5px;max-width:440px;margin-bottom:8px;}
+.scroll-card{background:rgba(180,140,60,.05);border:1px solid rgba(200,144,26,.22);padding:9px 12px;display:flex;align-items:center;gap:8px;transition:all .2s;}
+.scroll-arrows{display:flex;flex-direction:column;gap:2px;flex-shrink:0;}
+.arr-btn{background:rgba(200,144,26,.12);border:1px solid rgba(200,144,26,.25);color:var(--gold);cursor:pointer;padding:2px 7px;font-size:11px;transition:all .15s;}
+.arr-btn:hover:not(:disabled){background:rgba(200,144,26,.28);}
+.arr-btn:disabled{opacity:.25;cursor:not-allowed;}
+.scroll-title{font-size:10px;color:var(--gd);text-transform:uppercase;letter-spacing:1px;margin-bottom:2px;}
+.scroll-text{font-size:13px;font-style:italic;color:var(--tx);}
+.gods-row{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px;}
+.god-btn{background:rgba(200,144,26,.04);border:1px solid rgba(200,144,26,.14);padding:7px 10px;text-align:center;cursor:pointer;font-family:'Cinzel',serif;font-size:10px;color:var(--td);transition:all .2s;min-width:74px;}
+.god-btn:hover{border-color:var(--gd);color:var(--tx);}
+.god-icon{font-size:18px;display:block;margin-bottom:3px;}
+.god-name{font-size:9px;text-transform:uppercase;letter-spacing:.8px;}
+.scroll-reveal{margin-top:12px;padding:12px;border:1px solid var(--gold);background:rgba(200,144,26,.07);color:var(--gl);font-size:15px;font-style:italic;text-align:center;letter-spacing:3px;animation:fadeIn .8s;}
+
+/* ── OBSERVATORY ── */
+.star-map-wrap{margin:8px 0;}
+#star-svg{width:100%;max-width:520px;display:block;cursor:crosshair;}
+.star-dot{cursor:pointer;}
+.star-sel-dot{filter:drop-shadow(0 0 5px gold);}
+.obs-count{font-size:12px;color:var(--gd);margin:5px 0;}
+
+/* ── TREASURY ── */
+.ped-row{display:flex;gap:10px;flex-wrap:wrap;margin:8px 0;}
+.pedestal{width:88px;min-height:100px;background:rgba(100,70,20,.18);border:2px solid rgba(200,144,26,.22);display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:7px;cursor:pointer;transition:all .2s;position:relative;}
+.pedestal:hover{border-color:var(--gd);}
+.pedestal.ped-target{border-color:var(--gold);box-shadow:0 0 12px rgba(200,144,26,.4);}
+.pedestal.ped-filled{border-color:rgba(200,144,26,.45);}
+.pedestal.ped-correct{border-color:var(--gb);box-shadow:0 0 10px rgba(64,192,96,.3);}
+.ped-sym-bg{font-size:26px;position:absolute;top:6px;opacity:.25;}
+.ped-placed-icon{font-size:20px;margin-bottom:3px;}
+.ped-placed-name{font-size:8px;color:var(--td);text-align:center;text-transform:uppercase;letter-spacing:.4px;}
+.ped-empty-txt{font-size:9px;color:var(--td);opacity:.5;text-align:center;margin-bottom:4px;}
+.ped-concept{font-size:8px;color:var(--td);opacity:.4;margin-top:2px;text-transform:uppercase;letter-spacing:.5px;}
+.items-row{display:flex;gap:8px;flex-wrap:wrap;}
+.inv-item{background:rgba(200,144,26,.07);border:1px solid rgba(200,144,26,.18);padding:9px 10px;cursor:pointer;text-align:center;transition:all .2s;min-width:78px;}
+.inv-item:hover:not(.item-placed){background:rgba(200,144,26,.14);border-color:var(--gd);}
+.inv-item.item-selected{border-color:var(--gold);background:rgba(200,144,26,.2);box-shadow:0 0 8px rgba(200,144,26,.4);}
+.inv-item.item-placed{opacity:.3;pointer-events:none;}
+.item-icon-big{font-size:20px;display:block;margin-bottom:3px;}
+.item-name-small{font-size:9px;color:var(--td);text-transform:uppercase;letter-spacing:.4px;}
+
+/* ── SANCTUM ── */
+.sanc-wrap{max-width:480px;}
+.slot-row{display:flex;gap:10px;flex-wrap:wrap;margin:8px 0 14px;}
+.sanc-slot{width:96px;height:96px;background:rgba(74,32,104,.12);border:2px solid rgba(144,96,204,.22);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:all .3s;gap:5px;position:relative;}
+.sanc-slot:hover:not(.slot-filled){border-color:var(--pb);background:rgba(74,32,104,.28);}
+.sanc-slot.slot-filled{border-color:var(--pb);background:rgba(74,32,104,.18);box-shadow:0 0 14px rgba(144,96,204,.35);}
+.slot-icon{font-size:26px;}
+.slot-name{font-size:9px;color:var(--td);text-transform:uppercase;letter-spacing:.8px;text-align:center;}
+.slot-filled .slot-name{color:var(--pb);}
+.slot-check{position:absolute;top:4px;right:6px;color:var(--gb);font-size:12px;}
+.code-panel{margin-top:14px;padding:16px;border:1px solid rgba(144,96,204,.35);background:rgba(74,32,104,.08);animation:fadeIn .8s;}
+.code-inp-row{display:flex;gap:8px;align-items:center;margin:8px 0;}
+#code-input{background:transparent;border:2px solid rgba(144,96,204,.4);color:var(--pb);font-family:'Cinzel',serif;font-size:24px;letter-spacing:8px;text-align:center;width:140px;padding:8px;outline:none;transition:border-color .2s;}
+#code-input:focus{border-color:var(--pb);}
+#code-input.wrong-input{border-color:var(--rb);color:var(--rb);animation:cinpshake .4s;}
+@keyframes cinpshake{0%,100%{transform:translateX(0);}20%{transform:translateX(-7px);}40%{transform:translateX(7px);}60%{transform:translateX(-5px);}80%{transform:translateX(5px);}}
+.inner-chamber{margin-top:14px;padding:18px;border:1px solid var(--gd);background:rgba(200,144,26,.03);animation:fadeIn 1s;}
+.anubis-big{font-size:58px;text-align:center;margin-bottom:12px;animation:pulse 3s ease-in-out infinite;display:block;}
+.chamber-btns{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;}
+.chbtn{background:transparent;font-family:'Cinzel',serif;font-size:13px;letter-spacing:2px;padding:11px 18px;cursor:pointer;text-transform:uppercase;transition:all .3s;}
+.chbtn-life{border:2px solid var(--gb);color:var(--gb);}
+.chbtn-life:hover{background:rgba(64,192,96,.13);}
+.chbtn-death{border:2px solid var(--td);color:var(--td);}
+.chbtn-death:hover{border-color:var(--gold);color:var(--gold);background:rgba(200,144,26,.08);}
+.chbtn-escape{border:2px solid var(--rb);color:var(--rb);}
+.chbtn-escape:hover{background:rgba(204,42,42,.13);}
+
+/* ── ENDING ── */
+#ending-screen{display:none;position:fixed;inset:0;z-index:1100;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:30px;animation:fadeIn 2s;}
+.ending{display:flex;flex-direction:column;align-items:center;max-width:560px;}
+.end-good{background:radial-gradient(ellipse at center,#061208 0%,#000 100%);width:100%;padding:40px;}
+.end-buried{background:radial-gradient(ellipse at center,#1a0a00 0%,#000 100%);width:100%;padding:40px;}
+.end-cursed{background:radial-gradient(ellipse at center,#0a0020 0%,#000 100%);width:100%;padding:40px;}
+.end-secret{background:radial-gradient(ellipse at center,#141200 0%,#000 100%);width:100%;padding:40px;}
+.end-symbol{font-size:72px;margin-bottom:18px;animation:pulse 2s ease-in-out infinite;}
+.end-title{font-family:'Cinzel Decorative',serif;font-size:34px;margin-bottom:14px;letter-spacing:3px;}
+.end-text{font-size:14px;line-height:1.9;color:var(--tx);margin-bottom:20px;max-width:480px;}
+.end-stats{font-size:12px;color:var(--td);border:1px solid rgba(200,144,26,.18);padding:10px 22px;margin-bottom:24px;letter-spacing:.5px;}
+.restart-btn{background:transparent;border:2px solid var(--gold);color:var(--gold);font-family:'Cinzel',serif;font-size:13px;letter-spacing:3px;padding:11px 34px;cursor:pointer;transition:all .3s;}
+.restart-btn:hover{background:rgba(200,144,26,.13);color:var(--gl);}
+
+/* ── GLOBAL ANIMATIONS ── */
+@keyframes pulse{0%,100%{transform:scale(1);}50%{transform:scale(1.06);}}
+@keyframes flicker{0%{opacity:1;}10%{opacity:.2;}20%{opacity:.9;}30%{opacity:.05;}40%{opacity:.85;}55%{opacity:0;}65%{opacity:1;}75%{opacity:.3;}85%{opacity:.95;}100%{opacity:1;}}
+@keyframes shake{0%,100%{transform:translate(0,0);}10%{transform:translate(-5px,2px);}20%{transform:translate(5px,-2px);}30%{transform:translate(-4px,3px);}40%{transform:translate(4px,-3px);}50%{transform:translate(-5px,1px);}60%{transform:translate(5px,-1px);}70%{transform:translate(-2px,2px);}80%{transform:translate(2px,-2px);}90%{transform:translate(-3px,1px);}}
+@keyframes whisperanim{0%,100%{opacity:0;transform:translateY(0);}20%,80%{opacity:1;}50%{transform:translateY(-12px);}}
+@keyframes notifanim{0%{opacity:0;transform:translateX(-50%) translateY(-10px);}15%,75%{opacity:1;transform:translateX(-50%) translateY(0);}100%{opacity:0;transform:translateX(-50%) translateY(-8px);}}
+@keyframes darkfade{0%,100%{opacity:0;}30%,70%{opacity:1;}}
+@keyframes flashout{0%{opacity:1;}100%{opacity:0;}}
+
+/* scrollbar */
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:var(--gd);}
+</style>
+</head>
+<body>
+
+<!-- INTRO -->
+<div id="intro">
+  <div class="intro-eye">🏺</div>
+  <h1 class="intro-title">PYRAMID OF ANUBIS</h1>
+  <p class="intro-sub">Escape the Cursed Tomb</p>
+  <div class="voice-box">
+    You have entered the Pyramid of Anubis. A hidden mechanism activates behind you.<br><br>
+    <strong style="color:var(--sb);">"You have 45 minutes before the tomb is sealed forever."</strong><br><br>
+    The pyramid begins filling with cursed sand. Find the four Sacred Seals. Discover the way out.<br>
+    If you fail... you will be buried alive.
+  </div>
+  <button id="start-btn">⚰ Enter the Tomb</button>
+</div>
+
+<!-- GAME -->
+<div id="game">
+  <div id="header">
+    <div class="h-title">🏺 PYRAMID OF ANUBIS</div>
+    <div class="h-timer-wrap">
+      <div class="h-timer-lbl">TOMB SEALS IN</div>
+      <div id="timer-display">45:00</div>
+    </div>
+    <div class="h-info">
+      Wrong Actions: <span id="wrong-count">0</span>/5<br>
+      Seals: <span id="seal-count">0</span>/4
+    </div>
+  </div>
+
+  <div id="main-layout">
+    <div id="room-panel">
+      <div id="room-header">
+        <div id="room-name">Entrance Chamber</div>
+        <div id="room-atmos">Torchlight flickers against ancient stone.</div>
+      </div>
+      <div id="room-content"></div>
+      <div id="msg-log"></div>
+    </div>
+
+    <div id="sidebar">
+      <div class="sb-sec">
+        <div class="sb-title">⬡ Sacred Seals</div>
+        <div id="seals-list"></div>
+      </div>
+      <div id="clues-wrap">
+        <div class="sb-title2">📜 Discoveries</div>
+        <div id="clues-list"><div class="no-clues">No discoveries yet...</div></div>
+      </div>
+    </div>
+  </div>
+
+  <nav id="nav-bar">
+    <button class="nav-btn active" data-room="entrance" onclick="goTo('entrance')">
+      <span class="ni">🔥</span><span class="nl">Entrance</span>
+    </button>
+    <button class="nav-btn" data-room="burial" onclick="goTo('burial')">
+      <span class="ni">⚰</span><span class="nl">Burial</span>
+    </button>
+    <button class="nav-btn" data-room="priest" onclick="goTo('priest')">
+      <span class="ni">📜</span><span class="nl">Priest</span>
+    </button>
+    <button class="nav-btn" data-room="treasury" onclick="goTo('treasury')">
+      <span class="ni">💰</span><span class="nl">Treasury</span>
+    </button>
+    <button class="nav-btn" data-room="observatory" onclick="goTo('observatory')">
+      <span class="ni">⭐</span><span class="nl">Observatory</span>
+    </button>
+    <button class="nav-btn locked-nav" id="nav-sanctum" data-room="sanctum" onclick="goTo('sanctum')" disabled>
+      <span class="ni">🔮</span><span class="nl">Sanctum</span>
+    </button>
+  </nav>
+</div>
+
+<!-- ENDING -->
+<div id="ending-screen"></div>
+
+<script>
+// ============================================================
+// DATA
+// ============================================================
+
+const SARC_DATA = [
+  {sym:'🐺', name:'Jackal'},
+  {sym:'👁',  name:'Eye of Ra'},
+  {sym:'☀️',  name:'Sun'},
+  {sym:'🪲',  name:'Scarab'},
+  {sym:'🌙',  name:'Moon'},
+  {sym:'🐍',  name:'Serpent'},
+];
+
+const SCROLL_DATA = [
+  {title:'Fragment I',   text:'"The river remembers what the sky forgets."',   god:'Osiris'},
+  {title:'Fragment II',  text:'"The sky forgives what the earth denies."',      god:'Horus'},
+  {title:'Fragment III', text:'"The king watches all that is below him."',      god:'Ra'},
+  {title:'Fragment IV',  text:'"The judge weighs what the king decrees."',      god:'Anubis'},
+];
+// Correct order (Ra→Osiris→Horus→Anubis) = indices [2, 0, 1, 3]
+const CORRECT_SCROLL = [2, 0, 1, 3];
+
+// 15 stars: first 7 (id 0-6) = eastern constellation (correct)
+// ids 7-14 = wrong western stars
+const STAR_DATA = [
+  {id:0,  x:322, y:55,  correct:true},
+  {id:1,  x:365, y:90,  correct:true},
+  {id:2,  x:412, y:70,  correct:true},
+  {id:3,  x:392, y:143, correct:true},
+  {id:4,  x:445, y:178, correct:true},
+  {id:5,  x:353, y:207, correct:true},
+  {id:6,  x:422, y:238, correct:true},
+  {id:7,  x:62,  y:42,  correct:false},
+  {id:8,  x:108, y:88,  correct:false},
+  {id:9,  x:52,  y:138, correct:false},
+  {id:10, x:142, y:168, correct:false},
+  {id:11, x:78,  y:228, correct:false},
+  {id:12, x:178, y:50,  correct:false},
+  {id:13, x:188, y:208, correct:false},
+  {id:14, x:248, y:132, correct:false},
+];
+
+const ITEM_DATA = [
+  {id:'life',  icon:'☥',  name:'Ankh Statuette', hint:'A golden ankh — the symbol of eternal life.'},
+  {id:'death', icon:'💀',  name:'Skull Carving',  hint:'Cold, polished bone, smooth from ancient hands.'},
+  {id:'time',  icon:'⌛',  name:'Hourglass Gem',  hint:'Sand flows perpetually within its crystal walls.'},
+  {id:'truth', icon:'👁',  name:'Crystal Eye',    hint:'It sees all. It hides nothing. The eye of judgment.'},
+];
+
+const PED_DATA = [
+  {id:0, concept:'Life',  sym:'☥', correct:'life'},
+  {id:1, concept:'Death', sym:'⚰', correct:'death'},
+  {id:2, concept:'Time',  sym:'⌛', correct:'time'},
+  {id:3, concept:'Truth', sym:'🔮', correct:'truth'},
+];
+
+const SEAL_DATA = [
+  {id:'death',  name:'Seal of Death',  icon:'💀', num:2},
+  {id:'wisdom', name:'Seal of Wisdom', icon:'📜', num:1},
+  {id:'time',   name:'Seal of Time',   icon:'⏳', num:3},
+  {id:'truth',  name:'Seal of Truth',  icon:'👁', num:4},
+];
+
+const WHISPERS = [
+  'The dead are watching you...',
+  'You will never leave this place...',
+  'The sands remember every soul...',
+  'Anubis grows impatient...',
+  'Your heart will be weighed...',
+  'The tomb hungers for the living...',
+  'Turn back... there is no escape...',
+  'The gods are watching your every move...',
+];
+
+const FAKE_EVENTS = [
+  'A hidden passage has opened somewhere...',
+  'A secret mechanism clicks in the walls...',
+  'Something stirs in the darkness nearby...',
+  'The walls tremble with a hidden secret...',
+];
+
+const CORRECT_CODE = '2134';
+
+// ============================================================
+// STATE
+// ============================================================
+
+let G = {};
+
+function initState() {
+  G = {
+    room: 'entrance',
+    timer: 2700,
+    phase: 'intro',
+    seals: new Set(),
+    wrongActions: 0,
+    clues: [],
+    messages: [],
+    startTime: 0,
+    timerInterval: null,
+
+    entrance: {statue:false, wall:false, torch:false, sand:false, door:false},
+
+    burial: {
+      dirs: [2, 3, 0, 2, 0, 3],
+      solved: false,
+    },
+
+    priest: {
+      order: [0, 1, 2, 3],
+      solved: false,
+    },
+
+    observatory: {
+      selected: new Set(),
+      wallRead: false,
+      solved: false,
+    },
+
+    treasury: {
+      pedestals: [null, null, null, null],
+      selectedItem: null,
+      tabletRead: false,
+      solved: false,
+      vaultOpened: false,
+    },
+
+    sanctum: {
+      placed: new Set(),
+      doorOpen: false,
+      lifePressed: false,
+      escapePressed: false,
+    },
+
+    curseNextAt: 2400,
+    curseCount: 0,
+  };
+}
+
+// ============================================================
+// TIMER
+// ============================================================
+
+function tick() {
+  if (G.phase !== 'playing') return;
+  G.timer--;
+  updateTimerEl();
+
+  if (G.timer === G.curseNextAt && G.curseNextAt > 0) {
+    triggerCurse();
+    G.curseNextAt -= 300;
+    G.curseCount++;
+  }
+
+  if (G.timer <= 0) triggerEnding('buried');
+}
+
+function updateTimerEl() {
+  const m = Math.floor(G.timer / 60);
+  const s = G.timer % 60;
+  const el = document.getElementById('timer-display');
+  if (!el) return;
+  el.textContent = String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+  el.className = G.timer <= 300 ? 'urgent' : G.timer <= 600 ? 'warning' : '';
+}
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+
+function goTo(room) {
+  if (G.phase !== 'playing') return;
+  if (room === 'sanctum' && G.seals.size < 4) {
+    msg('The sanctum door is sealed. Collect all four Sacred Seals first.', 'danger');
+    return;
+  }
+  G.room = room;
+  renderRoom();
+  syncNav();
+}
+
+function syncNav() {
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.room === G.room));
+  const sb = document.getElementById('nav-sanctum');
+  if (!sb) return;
+  const locked = G.seals.size < 4;
+  sb.disabled = locked;
+  sb.classList.toggle('locked-nav', locked);
+  sb.classList.toggle('unlocked-nav', !locked);
+}
+
+// ============================================================
+// UI UTILITIES
+// ============================================================
+
+function msg(text, type) {
+  type = type || 'info';
+  G.messages.unshift({text, type});
+  if (G.messages.length > 25) G.messages.pop();
+  renderMessages();
+}
+
+function renderMessages() {
+  const el = document.getElementById('msg-log');
+  if (!el) return;
+  el.innerHTML = G.messages.slice(0, 9).map(m =>
+    '<div class="msg msg-' + m.type + '">' + m.text + '</div>'
+  ).join('');
+}
+
+function addClue(id, icon, text, important) {
+  if (G.clues.find(c => c.id === id)) return;
+  G.clues.unshift({id, icon, text, important: !!important, isNew: true});
+  renderClues();
+  setTimeout(() => {
+    const c = G.clues.find(c => c.id === id);
+    if (c) { c.isNew = false; renderClues(); }
+  }, 2500);
+}
+
+function renderClues() {
+  const el = document.getElementById('clues-list');
+  if (!el) return;
+  if (!G.clues.length) { el.innerHTML = '<div class="no-clues">No discoveries yet...</div>'; return; }
+  el.innerHTML = G.clues.map(c =>
+    '<div class="clue-item' + (c.important ? ' clue-key' : '') + (c.isNew ? ' clue-new' : '') + '">' +
+    '<span class="clue-icon">' + c.icon + '</span>' +
+    '<span>' + c.text + '</span>' +
+    '</div>'
+  ).join('');
+}
+
+function renderSeals() {
+  const el = document.getElementById('seals-list');
+  if (!el) return;
+  el.innerHTML = SEAL_DATA.map(s =>
+    '<div class="seal-slot' + (G.seals.has(s.id) ? ' seal-got' : '') + '">' +
+    '<span class="si">' + s.icon + '</span>' +
+    '<span>' + s.name + '</span>' +
+    '</div>'
+  ).join('');
+  const sc = document.getElementById('seal-count');
+  if (sc) sc.textContent = G.seals.size;
+}
+
+function acquireSeal(id) {
+  if (G.seals.has(id)) return;
+  G.seals.add(id);
+  const seal = SEAL_DATA.find(s => s.id === id);
+  showNotif('✦ ' + seal.name.toUpperCase() + ' OBTAINED ✦', true);
+  renderSeals();
+  syncNav();
+  if (G.seals.size === 4) {
+    setTimeout(() => {
+      showNotif('ALL FOUR SEALS — SANCTUM UNLOCKED', true);
+      msg('✦ All four Sacred Seals collected. The Final Sanctum can now be entered.', 'success');
+    }, 1800);
+  }
+}
+
+function wrongAct(secs, reason) {
+  G.wrongActions++;
+  const wc = document.getElementById('wrong-count');
+  if (wc) wc.textContent = G.wrongActions;
+  G.timer = Math.max(60, G.timer - (secs || 120));
+  updateTimerEl();
+  flashRed();
+  msg('✘ ' + (reason || 'Wrong action.') + ' Time penalty: -' + Math.round((secs||120)/60) + ' min. (' + G.wrongActions + '/5 strikes)', 'danger');
+  if (G.wrongActions >= 5) triggerEnding('cursed');
+}
+
+function flashRed() {
+  const el = document.createElement('div');
+  el.style.cssText = 'position:fixed;inset:0;background:rgba(180,0,0,.18);pointer-events:none;z-index:700;animation:flashout .6s forwards';
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 650);
+}
+
+function showNotif(text, isSeal) {
+  const el = document.createElement('div');
+  el.style.cssText = 'position:fixed;top:58px;left:50%;transform:translateX(-50%);' +
+    'background:rgba(0,0,0,.93);border:1px solid ' + (isSeal ? 'rgba(180,120,255,.8)' : 'rgba(200,160,60,.7)') + ';' +
+    'color:' + (isSeal ? '#c090ff' : '#e8c060') + ';font-family:Cinzel,serif;font-size:12px;' +
+    'letter-spacing:2px;padding:9px 26px;z-index:850;pointer-events:none;text-align:center;' +
+    'animation:notifanim 3.5s ease-in-out forwards;white-space:nowrap;';
+  el.textContent = text;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 3600);
+}
+
+// ============================================================
+// ROOM RENDERING
+// ============================================================
+
+function renderRoom() {
+  const rc = document.getElementById('room-content');
+  if (!rc) return;
+
+  const titles = {
+    entrance:'Entrance Chamber', burial:'Burial Chamber', priest:'Priest Chamber',
+    treasury:'Treasury', observatory:'Observatory', sanctum:'Final Sanctum'
+  };
+  const atmos = {
+    entrance:'Torchlight flickers against ancient stone. Cursed sand drifts from above.',
+    burial:'Six sarcophagi rest in eternal silence. The air smells of resin and embalming spice.',
+    priest:'Tattered scroll fragments hang from hooks. A shrine to the gods stands at the far wall.',
+    treasury:'Gold and gemstone catch the dim light. Four stone pedestals wait for something.',
+    observatory:'The ceiling opens to a vast sea of stars. The cosmos watches your every move.',
+    sanctum:'A colossal stone door bars the only exit. A stone altar holds four empty slots.'
+  };
+
+  document.getElementById('room-name').textContent = titles[G.room];
+  document.getElementById('room-atmos').textContent = atmos[G.room];
+
+  const renderers = {
+    entrance: renderEntrance, burial: renderBurial, priest: renderPriest,
+    treasury: renderTreasury, observatory: renderObservatory, sanctum: renderSanctum
+  };
+
+  rc.innerHTML = renderers[G.room]();
+  attachEvents();
+}
+
+// ── ENTRANCE ──────────────────────────────────────
+function renderEntrance() {
+  return '<div class="obj-grid">' +
+    objBtn('e-statue', '🗿', 'Statue', G.entrance.statue, false) +
+    objBtn('e-wall', '🪨', 'Stone Wall', G.entrance.wall, G.entrance.wall) +
+    objBtn('e-torch', '🔥', 'Torch', G.entrance.torch, G.entrance.torch) +
+    objBtn('e-sand', '⏳', 'Cursed Sand', G.entrance.sand, false) +
+    objBtn('e-door', '🚪', 'Sealed Door', G.entrance.door, false) +
+    '</div>' +
+    (G.entrance.wall ? insc('≋ Wall Inscription — The Order of the Gods',
+      '"In the age before memory, four gods were worshipped in sacred order: <strong>Ra</strong> above all, then <strong>Osiris</strong> of the river, then <strong>Horus</strong> of the sky, and finally <strong>Anubis</strong> of judgment."') : '') +
+    (G.entrance.torch ? insc('≋ Observation',
+      '"The torch flame does not rise straight. It bends — unmistakably — toward the <strong>east</strong>. Something out there draws it."') : '');
+}
+
+// ── BURIAL ────────────────────────────────────────
+function renderBurial() {
+  const dirs = ['↑ North','→ East','↓ South','← West'];
+  const arrows = ['↑','→','↓','←'];
+  const facing = G.burial.dirs.filter(d => d === 1).length;
+
+  const sarcs = SARC_DATA.map((s, i) => {
+    const d = G.burial.dirs[i];
+    const east = d === 1;
+    return '<div class="sarc' + (east ? ' sarc-east' : '') + '" data-ev="b-rotate" data-idx="' + i + '" title="Click to rotate">' +
+      '<span class="sarc-sym">' + s.sym + '</span>' +
+      '<span class="sarc-name">' + s.name + '</span>' +
+      '<span class="sarc-arrow" style="color:' + (east ? '#40c060' : '#8a6040') + '">' + arrows[d] + '</span>' +
+      '<span class="sarc-dir-text">' + dirs[d] + '</span>' +
+      '<span class="sarc-hint">' + (east ? '✓ facing east' : 'click to rotate') + '</span>' +
+      '</div>';
+  }).join('');
+
+  return insc('≋ Wall Inscription', '"Only the dead face the rising king."') +
+    '<hr class="divider">' +
+    '<p class="room-hint">Click each sarcophagus to rotate it. Arrows show the direction it faces. (<strong style="color:var(--gl)">' + facing + '/6</strong> facing east)</p>' +
+    '<div class="sarc-grid">' + sarcs + '</div>' +
+    (G.burial.solved ? '<div class="inscription" style="border-color:#40c060;margin-top:14px;"><div class="insc-label" style="color:#40c060;">≋ Hidden Compartment Opened</div><div class="insc-text">All sarcophagi face east — toward the rising king. A hidden compartment slides open with a grinding of stone. The <strong>Seal of Death</strong> gleams inside.</div></div>' : '');
+}
+
+// ── PRIEST ────────────────────────────────────────
+function renderPriest() {
+  const frags = G.priest.order.map((idx, pos) => {
+    const f = SCROLL_DATA[idx];
+    return '<div class="scroll-card">' +
+      '<div class="scroll-arrows">' +
+      '<button class="arr-btn" data-ev="p-up" data-pos="' + pos + '"' + (pos === 0 ? ' disabled' : '') + '>▲</button>' +
+      '<button class="arr-btn" data-ev="p-down" data-pos="' + pos + '"' + (pos === 3 ? ' disabled' : '') + '>▼</button>' +
+      '</div>' +
+      '<div><div class="scroll-title">' + f.title + '</div><div class="scroll-text">' + f.text + '</div></div>' +
+      '</div>';
+  }).join('');
+
+  const gods = [
+    {icon:'☀️', name:'Ra', desc:'The Sun God. Supreme ruler of all gods. He who created life with his light. Worshipped first, above all others.'},
+    {icon:'🌊', name:'Osiris', desc:'God of the Nile and Afterlife. Lord of the river and the underworld. Betrayed, slain, and reborn. Worshipped second.'},
+    {icon:'🦅', name:'Horus', desc:'God of the Sky. The great falcon. Son of Osiris. Protector of the pharaoh. Worshipped third among the four.'},
+    {icon:'🐺', name:'Anubis', desc:'God of Judgment and Death. The jackal-headed guide of the dead. He who weighs the hearts of men. Worshipped last.'},
+  ].map(g =>
+    '<button class="god-btn" data-ev="p-god" data-god="' + g.name + '" title="' + g.desc + '">' +
+    '<span class="god-icon">' + g.icon + '</span>' +
+    '<span class="god-name">' + g.name + '</span>' +
+    '</button>'
+  ).join('');
+
+  return insc('≋ Wall Inscription', '"Read not by the order found, but by the order <strong>worshipped</strong>."') +
+    '<hr class="divider">' +
+    '<p class="room-hint">Rearrange the scroll fragments. When satisfied, click Read.</p>' +
+    '<div class="scroll-list">' + frags + '</div>' +
+    '<button class="action-btn" data-ev="p-read">📜 Read the Combined Scroll</button>' +
+    (G.priest.solved ? '<div class="scroll-reveal">✦ THE STARS REVEAL TRUTH ✦</div>' : '') +
+    '<hr class="divider">' +
+    '<p class="room-hint">Wall Shrine — click a god to learn more:</p>' +
+    '<div class="gods-row">' + gods + '</div>';
+}
+
+// ── OBSERVATORY ───────────────────────────────────
+function renderObservatory() {
+  const dots = STAR_DATA.map(s => {
+    const sel = G.observatory.selected.has(s.id);
+    const isCorrect = s.correct;
+    let fill, r;
+    if (sel) { fill = '#ffd700'; r = 5; }
+    else { fill = isCorrect ? 'rgba(200,200,255,0.7)' : 'rgba(180,180,220,0.5)'; r = 3; }
+    return '<circle cx="' + s.x + '" cy="' + s.y + '" r="' + r + '" fill="' + fill + '" ' +
+      (sel ? 'style="filter:drop-shadow(0 0 5px gold);" class="star-sel-dot" ' : '') +
+      'data-ev="o-star" data-id="' + s.id + '" stroke="none" style="cursor:pointer;' + (sel ? 'filter:drop-shadow(0 0 5px gold);' : '') + '"/>';
+  }).join('');
+
+  let lines = '';
+  if (G.observatory.solved) {
+    const pts = STAR_DATA.filter(s => s.correct);
+    for (let i = 0; i < pts.length - 1; i++) {
+      lines += '<line x1="' + pts[i].x + '" y1="' + pts[i].y + '" x2="' + pts[i+1].x + '" y2="' + pts[i+1].y + '" stroke="rgba(255,215,0,.4)" stroke-width="1.5" stroke-dasharray="4,4"/>';
+    }
+  }
+
+  const selCount = G.observatory.selected.size;
+  const correctSel = STAR_DATA.filter(s => s.correct && G.observatory.selected.has(s.id)).length;
+  const wrongSel = STAR_DATA.filter(s => !s.correct && G.observatory.selected.has(s.id)).length;
+
+  return objBtn('o-wall', '🪨', 'Examine Wall', G.observatory.wallRead, G.observatory.wallRead) +
+    (G.observatory.wallRead ? insc('≋ Wall Inscription', '"The stars remember what men forget. The heavens hold the pattern of all truth. Look where the flame leads."') : '') +
+    '<hr class="divider">' +
+    '<p class="room-hint">Click stars to select them. Selected: <strong style="color:var(--gl)">' + selCount + '</strong> star(s)' +
+    (wrongSel > 0 ? ' &nbsp;|&nbsp; <span style="color:var(--rb)">' + wrongSel + ' western star(s) selected — these do not belong</span>' : '') +
+    (correctSel > 0 ? ' &nbsp;|&nbsp; <span style="color:var(--gb)">' + correctSel + '/7 eastern stars found</span>' : '') +
+    '</p>' +
+    '<div class="star-map-wrap">' +
+    '<svg id="star-svg" viewBox="0 0 500 280" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:520px;background:radial-gradient(ellipse at center,#080418 0%,#020108 100%);border:1px solid rgba(200,144,26,.2);border-radius:4px;display:block;">' +
+    dots + lines +
+    '<text x="467" y="145" fill="rgba(200,144,26,.4)" font-size="10" font-family="Cinzel,serif" text-anchor="middle">EAST</text>' +
+    '<text x="467" y="157" fill="rgba(200,144,26,.4)" font-size="10" font-family="Cinzel,serif" text-anchor="middle">→</text>' +
+    '<text x="28" y="145" fill="rgba(200,144,26,.18)" font-size="10" font-family="Cinzel,serif" text-anchor="middle">←</text>' +
+    '<text x="28" y="157" fill="rgba(200,144,26,.18)" font-size="10" font-family="Cinzel,serif" text-anchor="middle">WEST</text>' +
+    '</svg></div>' +
+    '<button class="action-btn" data-ev="o-observe">🔭 Observe the Constellation</button>' +
+    (G.observatory.solved ? '<div class="inscription" style="border-color:rgba(255,215,0,.5);margin-top:14px;text-align:center;"><div class="insc-label" style="color:#ffd700;">≋ Constellation Identified — The Duat Chronograph</div><div class="insc-text">The eastern stars align into an ancient astronomical pattern. Egyptian star-priests used this constellation as a sacred counter. The pattern corresponds to the number:<br><br><strong style="font-size:28px;letter-spacing:8px;color:#ffd700;">4312</strong><br><br><em style="font-size:11px;color:var(--td);">(Note this down carefully. But is it truly the answer...?)</em></div></div>' : '');
+}
+
+// ── TREASURY ──────────────────────────────────────
+function renderTreasury() {
+  const peds = PED_DATA.map((p, i) => {
+    const placedId = G.treasury.pedestals[i];
+    const item = placedId ? ITEM_DATA.find(it => it.id === placedId) : null;
+    const isTarget = G.treasury.selectedItem !== null && !placedId;
+    const isCorrect = G.treasury.solved && placedId === p.correct;
+    return '<div class="pedestal' +
+      (placedId ? ' ped-filled' : '') +
+      (isTarget ? ' ped-target' : '') +
+      (isCorrect ? ' ped-correct' : '') +
+      '" data-ev="t-ped" data-ped="' + i + '">' +
+      '<span class="ped-sym-bg">' + p.sym + '</span>' +
+      (item ? '<span class="ped-placed-icon">' + item.icon + '</span><span class="ped-placed-name">' + item.name + '</span>' :
+              '<span class="ped-empty-txt">— empty —</span>') +
+      '<span class="ped-concept">' + p.concept + '</span>' +
+      '</div>';
+  }).join('');
+
+  const items = ITEM_DATA.map(it => {
+    const placed = G.treasury.pedestals.includes(it.id);
+    const sel = G.treasury.selectedItem === it.id;
+    return '<div class="inv-item' + (placed ? ' item-placed' : '') + (sel ? ' item-selected' : '') +
+      '" data-ev="t-item" data-item="' + it.id + '" title="' + it.hint + '">' +
+      '<span class="item-icon-big">' + it.icon + '</span>' +
+      '<span class="item-name-small">' + it.name + '</span>' +
+      '</div>';
+  }).join('');
+
+  return objBtn('t-tablet', '📋', 'Stone Tablet', G.treasury.tabletRead, G.treasury.tabletRead) +
+    (G.treasury.tabletRead ? insc('≋ Stone Tablet',
+      '"The rich feared imbalance. These four pedestals guard four sacred truths: <strong>Life, Death, Time</strong>, and <strong>Truth</strong>. Each pillar must hold its proper artifact. The pedestals are labeled. The artifacts know where they belong."') : '') +
+    '<hr class="divider">' +
+    '<p class="room-hint">' + (G.treasury.selectedItem ? '<strong style="color:var(--gl)">Item selected — click a pedestal to place it.</strong>' : 'Select an artifact below, then click a pedestal.') + '</p>' +
+    '<div class="ped-row">' + peds + '</div>' +
+    '<hr class="divider">' +
+    '<p class="room-hint">Artifacts:</p>' +
+    '<div class="items-row">' + items + '</div>' +
+    (G.treasury.solved ?
+      '<button class="action-btn" data-ev="t-vault" style="margin-top:12px;">' + (G.treasury.vaultOpened ? '🔒 Vault (examined)' : '🔓 Open the Hidden Vault') + '</button>' +
+      (G.treasury.vaultOpened ? insc('≋ Stone Inscription — Inside the Vault',
+        '"Wise one — the stars deceive those who read them plainly.<br><strong>Turn the heavens upside down.</strong><br>What the eastern constellation shows as 4312, when inverted and read anew, reveals the true sequence:<br><br><strong style=\'font-size:22px;letter-spacing:6px;color:var(--gl);\'>2 1 3 4</strong>"') : '')
+      : '');
+}
+
+// ── SANCTUM ───────────────────────────────────────
+function renderSanctum() {
+  const slots = SEAL_DATA.map(s => {
+    const placed = G.sanctum.placed.has(s.id);
+    const have = G.seals.has(s.id);
+    return '<div class="sanc-slot' + (placed ? ' slot-filled' : '') +
+      '" data-ev="s-place" data-seal="' + s.id + '" title="' +
+      (have ? (placed ? 'Already placed' : 'Click to place') : 'Not yet obtained') + '">' +
+      '<span class="slot-icon">' + s.icon + '</span>' +
+      '<span class="slot-name">' + s.name + '</span>' +
+      (placed ? '<span class="slot-check">✓</span>' : '') +
+      '</div>';
+  }).join('');
+
+  const allPlaced = G.sanctum.placed.size === 4;
+
+  let html = insc('≋ The Great Stone Door',
+    '"Four seals of the sacred guardians must be placed upon this altar. Only then will the mechanism awaken and the path reveal itself."') +
+    '<p class="room-hint">Place your Sacred Seals (' + G.sanctum.placed.size + '/4):</p>' +
+    '<div class="slot-row">' + slots + '</div>';
+
+  if (allPlaced && !G.sanctum.doorOpen) {
+    html += '<hr class="divider">' +
+      insc('≋ The Seals Activate',
+        'The four seals pulse with golden energy. Upon each seal, a number is engraved in ancient script: <strong>Death (II · 2) &nbsp;·&nbsp; Wisdom (I · 1) &nbsp;·&nbsp; Time (III · 3) &nbsp;·&nbsp; Truth (IV · 4)</strong>.<br>The door hums, waiting for a four-digit code.') +
+      '<div class="code-panel">' +
+      '<p class="room-hint" style="text-align:center;">Enter the four-digit code:</p>' +
+      '<div class="code-inp-row">' +
+      '<input id="code-input" class="code-inp" type="text" maxlength="4" placeholder="____" autocomplete="off">' +
+      '<button class="action-btn" data-ev="s-code">Submit</button>' +
+      '</div>' +
+      '<p class="room-hint" style="font-size:10px;text-align:center;color:var(--td);">Hint: The seals show numbers... but what is the correct order?</p>' +
+      '</div>';
+  }
+
+  if (G.sanctum.doorOpen) {
+    html += '<hr class="divider">' +
+      '<div class="inscription" style="border-color:#40c060;text-align:center;">' +
+      '<div class="insc-label" style="color:#40c060;">≋ The Door Opens</div>' +
+      '<div class="insc-text">With a thunderous groan the great stone door swings inward, revealing an inner sanctum bathed in amber light.</div>' +
+      '</div>' +
+      '<div class="inner-chamber">' +
+      '<span class="anubis-big">🐺</span>' +
+      '<div class="inscription" style="border:none;text-align:center;">' +
+      '<div class="insc-text" style="font-size:14px;line-height:1.9;">' +
+      '"Only the truthful may leave."<br><br>' +
+      '<em>The great jackal statue of Anubis regards you with cold, ancient eyes. ' +
+      'His golden scales hang empty. He waits for your answer. ' +
+      'What is the ultimate truth that Anubis represents?</em>' +
+      '</div></div>' +
+      (G.sanctum.lifePressed ? '<p class="room-hint" style="color:var(--td);font-style:italic;text-align:center;">You grasp at life. Anubis shakes his head slowly. "You cannot escape through denial of mortality."</p>' : '') +
+      (G.sanctum.escapePressed ? '<p class="room-hint" style="color:var(--td);font-style:italic;text-align:center;">You lunge for the exit. The door does not move. Anubis watches, impassive as stone.</p>' : '') +
+      '<div class="chamber-btns">' +
+      '<button class="chbtn chbtn-life" data-ev="s-life">LIFE</button>' +
+      '<button class="chbtn chbtn-death" data-ev="s-death">DEATH</button>' +
+      '<button class="chbtn chbtn-escape" data-ev="s-escape">ESCAPE</button>' +
+      '</div>' +
+      '<p class="room-hint" style="font-size:10px;text-align:center;color:var(--td);margin-top:10px;">Think about what the jackal god truly represents. What is his purpose?</p>' +
+      '</div>';
+  }
+
+  return html;
+}
+
+// ── HELPERS ──
+function objBtn(ev, icon, label, visited, glow) {
+  return '<button class="obj-btn' + (visited ? ' obj-visited' : '') + (glow ? ' obj-glow' : '') +
+    '" data-ev="' + ev + '"><span class="obj-icon">' + icon + '</span><span class="obj-name">' + label + '</span></button>';
+}
+
+function insc(label, text) {
+  return '<div class="inscription"><div class="insc-label">' + label + '</div><div class="insc-text">' + text + '</div></div>';
+}
+
+// ============================================================
+// EVENTS
+// ============================================================
+
+function attachEvents() {
+  document.getElementById('room-content').querySelectorAll('[data-ev]').forEach(el => {
+    el.addEventListener('click', handleEv);
+  });
+  // Enter key on code input
+  const ci = document.getElementById('code-input');
+  if (ci) ci.addEventListener('keydown', e => { if (e.key === 'Enter') submitCode(ci.value.trim()); });
+}
+
+function handleEv(e) {
+  const ev = e.currentTarget.dataset.ev;
+  if (!ev) return;
+
+  // ── ENTRANCE ──
+  if (ev === 'e-statue') {
+    G.entrance.statue = true;
+    msg('🗿 An ancient statue of Anubis. The jackal god stares blankly forward, scales empty, awaiting judgment. He offers no clues directly, but his patience feels infinite.');
+    renderRoom();
+  }
+  else if (ev === 'e-wall') {
+    if (!G.entrance.wall) {
+      G.entrance.wall = true;
+      addClue('god_order', '📿', 'Worship order: Ra → Osiris → Horus → Anubis', true);
+      msg('🪨 Hieroglyphs cover the wall. They describe the gods in sacred order of worship. You commit the sequence to memory.', 'important');
+    } else {
+      msg('🪨 The wall records the order of worship: Ra first, then Osiris, then Horus, then Anubis.');
+    }
+    renderRoom();
+  }
+  else if (ev === 'e-torch') {
+    if (!G.entrance.torch) {
+      G.entrance.torch = true;
+      addClue('flame_east', '🔥', 'The torch flame bends unmistakably east', true);
+      msg('🔥 You study the torch flame carefully. It wavers... and bends toward the east. Something draws it. You feel this is significant.', 'important');
+    } else {
+      msg('🔥 The flame still bends east. Something pulls it in that direction.');
+    }
+    renderRoom();
+  }
+  else if (ev === 'e-sand') {
+    G.entrance.sand = true;
+    msg('⏳ Cursed sand seeps through cracks in the ceiling. It pools at your feet. You feel the clock ticking.');
+    renderRoom();
+  }
+  else if (ev === 'e-door') {
+    G.entrance.door = true;
+    msg('🚪 An enormous stone slab has sealed the entrance. Hieroglyphs read: "Only the worthy may leave." You need another way out.');
+    renderRoom();
+  }
+
+  // ── BURIAL ──
+  else if (ev === 'b-rotate') {
+    const idx = parseInt(e.currentTarget.dataset.idx);
+    G.burial.dirs[idx] = (G.burial.dirs[idx] + 1) % 4;
+    const dn = ['North','East','South','West'];
+    msg('↻ The ' + SARC_DATA[idx].name + ' sarcophagus rotates. It now faces ' + dn[G.burial.dirs[idx]] + '.');
+    if (!G.burial.solved && G.burial.dirs.every(d => d === 1)) {
+      G.burial.solved = true;
+      acquireSeal('death');
+      addClue('all_east', '⚰', '"Only the dead face the rising king" — all sarcophagi face east', true);
+      msg('💀 All six sarcophagi face east — toward the rising king! A stone panel grinds open. The Seal of Death is yours!', 'success');
+    }
+    renderRoom();
+  }
+
+  // ── PRIEST ──
+  else if (ev === 'p-up') {
+    const pos = parseInt(e.currentTarget.dataset.pos);
+    if (pos > 0) {
+      [G.priest.order[pos], G.priest.order[pos-1]] = [G.priest.order[pos-1], G.priest.order[pos]];
+      renderRoom();
+    }
+  }
+  else if (ev === 'p-down') {
+    const pos = parseInt(e.currentTarget.dataset.pos);
+    if (pos < 3) {
+      [G.priest.order[pos], G.priest.order[pos+1]] = [G.priest.order[pos+1], G.priest.order[pos]];
+      renderRoom();
+    }
+  }
+  else if (ev === 'p-read') {
+    const correct = JSON.stringify(G.priest.order) === JSON.stringify(CORRECT_SCROLL);
+    if (correct && !G.priest.solved) {
+      G.priest.solved = true;
+      acquireSeal('wisdom');
+      addClue('stars_truth', '⭐', '"The stars reveal truth" — hidden words in the combined scroll', true);
+      msg('📜 The fragments align perfectly. Hidden ink, invisible until now, glows between the lines: THE STARS REVEAL TRUTH. The Seal of Wisdom is revealed!', 'success');
+    } else if (correct) {
+      msg('📜 The combined scroll still reads: "THE STARS REVEAL TRUTH."', 'important');
+    } else {
+      msg('📜 The words do not form a coherent message. The order must be wrong. Think about which god came first in worship, and which came last...', 'danger');
+    }
+    renderRoom();
+  }
+  else if (ev === 'p-god') {
+    const godName = e.currentTarget.dataset.god;
+    const descs = {
+      Ra: '☀️ Ra — The Sun God. Supreme king above all gods. His light gives Egypt its life. He is worshipped first, before all others.',
+      Osiris: '🌊 Osiris — God of the Nile and the Afterlife. Betrayed by Set, slain, and reborn. Lord of the river and the dead. Worshipped second.',
+      Horus: '🦅 Horus — God of the Sky. The great falcon. Son of Osiris. Protector of the living pharaoh. Worshipped third among the four.',
+      Anubis: '🐺 Anubis — God of Judgment. The jackal-headed guardian of the dead. He who weighs the heart of every soul against the Feather of Truth. Worshipped last of the four.',
+    };
+    msg(descs[godName] || 'An ancient god of Egypt.');
+  }
+
+  // ── OBSERVATORY ──
+  else if (ev === 'o-wall') {
+    G.observatory.wallRead = true;
+    msg('🪨 The inscription reads: "The stars remember what men forget. The heavens hold the pattern of all truth. Look where the flame leads." You note the phrase about the flame...', 'important');
+    renderRoom();
+  }
+  else if (ev === 'o-star') {
+    const sid = parseInt(e.currentTarget.dataset.id);
+    const star = STAR_DATA.find(s => s.id === sid);
+    if (G.observatory.selected.has(sid)) {
+      G.observatory.selected.delete(sid);
+      msg('⭐ Star deselected.');
+    } else {
+      G.observatory.selected.add(sid);
+      if (!star.correct) {
+        msg('⭐ This star pulses faintly... but something feels off. It lies too far west. Perhaps the flame\'s direction matters here.');
+      } else {
+        msg('⭐ This eastern star glows brighter as you touch it. It resonates.');
+      }
+    }
+    renderRoom();
+  }
+  else if (ev === 'o-observe') {
+    if (G.observatory.solved) {
+      msg('🔭 The eastern constellation still shows: 4312.', 'important');
+      return;
+    }
+    const sel = G.observatory.selected;
+    const allCorrect = STAR_DATA.filter(s => s.correct).every(s => sel.has(s.id));
+    const noWrong = STAR_DATA.filter(s => !s.correct).every(s => !sel.has(s.id));
+
+    if (allCorrect && noWrong) {
+      G.observatory.solved = true;
+      acquireSeal('time');
+      addClue('constellation_4312', '🔭', 'Eastern constellation = 4312 (write this down!)', true);
+      msg('🔭 The seven eastern stars align! The Duat Chronograph constellation blazes gold. The number 4312 is revealed. The Seal of Time is yours!', 'success');
+      renderRoom();
+    } else {
+      const cs = STAR_DATA.filter(s => s.correct && sel.has(s.id)).length;
+      const ws = STAR_DATA.filter(s => !s.correct && sel.has(s.id)).length;
+      if (ws > 0) {
+        msg('🔭 The constellation is distorted by ' + ws + ' western star(s). They do not belong. Remove them and focus on the east.', 'danger');
+      } else {
+        msg('🔭 The pattern is incomplete. ' + cs + '/7 eastern stars found. The flame bends east — look where the torch pointed.', 'danger');
+      }
+    }
+  }
+
+  // ── TREASURY ──
+  else if (ev === 't-tablet') {
+    G.treasury.tabletRead = true;
+    addClue('four_pillars', '⚖️', 'Four sacred truths: Life (☥), Death (⚰), Time (⌛), Truth (🔮)', false);
+    msg('📋 The tablet speaks of four sacred pillars: Life, Death, Time, and Truth. Each must find its rightful throne. The pedestals are labeled.', 'important');
+    renderRoom();
+  }
+  else if (ev === 't-item') {
+    const itemId = e.currentTarget.dataset.item;
+    if (G.treasury.pedestals.includes(itemId)) {
+      msg('⚠ That artifact is on a pedestal. Click the pedestal to retrieve it first.');
+      return;
+    }
+    if (G.treasury.selectedItem === itemId) {
+      G.treasury.selectedItem = null;
+      msg('You set the artifact down.');
+    } else {
+      G.treasury.selectedItem = itemId;
+      const item = ITEM_DATA.find(it => it.id === itemId);
+      msg('You pick up the ' + item.name + '. ' + item.hint + ' Now click a pedestal to place it.');
+    }
+    renderRoom();
+  }
+  else if (ev === 't-ped') {
+    const pi = parseInt(e.currentTarget.dataset.ped);
+    const ped = PED_DATA[pi];
+    if (G.treasury.pedestals[pi]) {
+      const removedId = G.treasury.pedestals[pi];
+      G.treasury.pedestals[pi] = null;
+      const item = ITEM_DATA.find(it => it.id === removedId);
+      msg('You remove the ' + item.name + ' from the pedestal.');
+    } else if (G.treasury.selectedItem) {
+      const item = ITEM_DATA.find(it => it.id === G.treasury.selectedItem);
+      if (G.treasury.selectedItem !== ped.correct) {
+        G.treasury.selectedItem = null;
+        msg('✘ The ' + item.name + ' resists the ' + ped.concept + ' pedestal. It does not belong here. Think about what each artifact truly represents.', 'danger');
+        renderRoom();
+        return;
+      }
+      G.treasury.pedestals[pi] = G.treasury.selectedItem;
+      G.treasury.selectedItem = null;
+      msg('You place the ' + item.name + ' on the ' + ped.concept + ' pedestal. It settles with a soft click.');
+      if (PED_DATA.every((p, i) => G.treasury.pedestals[i] === p.correct) && !G.treasury.solved) {
+        G.treasury.solved = true;
+        acquireSeal('truth');
+        msg('👁 All four artifacts rest in perfect balance! The pedestals glow. A hidden panel slides open. The Seal of Truth is revealed!', 'success');
+      }
+    } else {
+      msg('The ' + ped.concept + ' pedestal — marked with ' + ped.sym + '. Select an artifact first, then place it here.');
+    }
+    renderRoom();
+  }
+  else if (ev === 't-vault') {
+    if (!G.treasury.solved) return;
+    G.treasury.vaultOpened = true;
+    addClue('invert_code', '🔄', '"Turn the heavens upside down" — 4312 inverted = 2134', true);
+    msg('🔮 Inside the vault, carved deep into the stone: the constellation must be inverted. 4312 becomes 2134. THIS is the true code.', 'success');
+    renderRoom();
+  }
+
+  // ── SANCTUM ──
+  else if (ev === 's-place') {
+    const sid = e.currentTarget.dataset.seal;
+    if (!G.seals.has(sid)) { msg('✘ You have not yet obtained that seal.', 'danger'); return; }
+    if (G.sanctum.placed.has(sid)) { msg('That seal is already placed.'); return; }
+    G.sanctum.placed.add(sid);
+    const seal = SEAL_DATA.find(s => s.id === sid);
+    msg('🔮 You place the ' + seal.name + ' into its slot. It glows faintly.', 'important');
+    renderRoom();
+  }
+  else if (ev === 's-code') {
+    const ci = document.getElementById('code-input');
+    submitCode(ci ? ci.value.trim() : '');
+  }
+  else if (ev === 's-life') {
+    G.sanctum.lifePressed = true;
+    wrongAct(120, 'LIFE is not the answer Anubis seeks.');
+    renderRoom();
+  }
+  else if (ev === 's-escape') {
+    G.sanctum.escapePressed = true;
+    wrongAct(120, 'ESCAPE is not the truth Anubis judges.');
+    renderRoom();
+  }
+  else if (ev === 's-death') {
+    const remaining = G.timer;
+    if (remaining >= 1800) triggerEnding('secret');
+    else triggerEnding('good');
+  }
+}
+
+function submitCode(val) {
+  if (val === CORRECT_CODE) {
+    G.sanctum.doorOpen = true;
+    showNotif('✦ THE GREAT DOOR OPENS ✦', true);
+    msg('✦ The code is correct! The stone door groans and swings open with ancient thunder!', 'success');
+    renderRoom();
+  } else if (val === '4312') {
+    msg('✘ The door shudders... then falls silent. The constellation number alone is not the answer. Remember what was written in the vault: "Turn the heavens upside down."', 'danger');
+    const ci = document.getElementById('code-input');
+    if (ci) { ci.classList.add('wrong-input'); setTimeout(() => ci.classList.remove('wrong-input'), 500); }
+  } else {
+    msg('✘ The door does not respond. The code is wrong.', 'danger');
+    const ci = document.getElementById('code-input');
+    if (ci) { ci.classList.add('wrong-input'); setTimeout(() => ci.classList.remove('wrong-input'), 500); }
+  }
+}
+
+// ============================================================
+// CURSE SYSTEM
+// ============================================================
+
+function triggerCurse() {
+  const effects = [doFlicker, doWhisper, doDarken, doFakeMsg, doShake, doTimerScare, doWhisper, doFlicker, doShake, doWhisper];
+  effects[G.curseCount % effects.length]();
+}
+
+function doFlicker() {
+  const g = document.getElementById('game');
+  g.style.animation = 'flicker .8s';
+  setTimeout(() => g.style.animation = '', 820);
+  msg('★ The torches sputter. For a heartbeat, the chamber falls dark.', 'curse');
+}
+
+function doWhisper() {
+  const txt = WHISPERS[Math.floor(Math.random() * WHISPERS.length)];
+  const el = document.createElement('div');
+  el.style.cssText = 'position:fixed;left:' + (15 + Math.random()*55) + '%;top:' + (25 + Math.random()*40) + '%;' +
+    'color:rgba(180,120,255,.72);font-family:Cinzel,serif;font-size:18px;font-style:italic;' +
+    'letter-spacing:3px;pointer-events:none;z-index:800;' +
+    'text-shadow:0 0 14px rgba(144,80,255,.5);animation:whisperanim 4.5s ease-in-out forwards;';
+  el.textContent = txt;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 4600);
+  msg('★ A voice whispers: "' + txt + '"', 'curse');
+}
+
+function doDarken() {
+  const el = document.createElement('div');
+  el.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.78);pointer-events:none;z-index:500;animation:darkfade 3.5s ease-in-out forwards;';
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 3600);
+  msg('★ Total darkness swallows the tomb. You cannot see anything. Then, slowly, torchlight returns.', 'curse');
+}
+
+function doFakeMsg() {
+  const txt = FAKE_EVENTS[Math.floor(Math.random() * FAKE_EVENTS.length)];
+  showNotif(txt, false);
+  msg('★ ' + txt, 'curse');
+}
+
+function doShake() {
+  const g = document.getElementById('game');
+  g.style.animation = 'shake .7s';
+  setTimeout(() => g.style.animation = '', 730);
+  msg('★ The pyramid groans. Sand rains from the ceiling. The walls are moving.', 'curse');
+}
+
+function doTimerScare() {
+  const t = document.getElementById('timer-display');
+  if (t) {
+    const orig = t.style.cssText;
+    t.style.color = '#cc0000';
+    t.style.fontSize = '38px';
+    setTimeout(() => { t.style.color = ''; t.style.fontSize = ''; }, 2500);
+  }
+  msg('★ The death clock pulses red. The tomb grows tighter around you.', 'danger');
+}
+
+// ============================================================
+// ENDINGS
+// ============================================================
+
+function triggerEnding(type) {
+  clearInterval(G.timerInterval);
+  G.timerInterval = null;
+  G.phase = 'ended';
+
+  const elapsed = Math.floor((Date.now() - G.startTime) / 1000);
+  const em = Math.floor(elapsed / 60), es = elapsed % 60;
+  const timeStr = em + 'm ' + es + 's';
+
+  const E = {
+    good: {
+      cls:'end-good', sym:'🌅', col:'#40c060', title:'ESCAPED',
+      text:'You stand before Anubis and accept the ultimate truth — mortality itself. You press DEATH. <br><br>Anubis nods once, slowly. A deep, ancient gesture of respect. The stone floor slides away beneath the altar, revealing a staircase of white alabaster. You climb toward light and warm air, emerging from the pyramid into the blazing Egyptian sun.<br><br><em>You survived the Pyramid of Anubis.</em>',
+    },
+    buried: {
+      cls:'end-buried', sym:'⏳', col:'#c48030', title:'BURIED ALIVE',
+      text:'The cursed sand rises past your knees. Past your waist. Past your shoulders.<br><br>The pyramid seals itself with you inside. Your notes, your discoveries, your desperate theories — all buried beneath three thousand years of silence.<br><br>In a thousand years, another explorer will find your remains, puzzled at why you never walked out.<br><br><em>The pyramid claimed another soul.</em>',
+    },
+    cursed: {
+      cls:'end-cursed', sym:'💀', col:'#9060cc', title:'CURSED FOREVER',
+      text:'You have disturbed too many sacred things. Opened too many forbidden doors. The curse of Anubis settles upon you like a burial shroud.<br><br>You do not die. But you cannot leave. You wander the endless corridors of the tomb, neither living nor truly dead — until the stars themselves burn out.<br><br><em>The jackal has judged you... and found you wanting.</em>',
+    },
+    secret: {
+      cls:'end-secret', sym:'🏆', col:'#e8c060', title:'MASTER OF THE TOMB',
+      text:'Incredible. You solved the Pyramid of Anubis in record time. Anubis stares at you not with cold judgment, but with something approaching... awe.<br><br>As you press DEATH and the staircase opens, a second passage appears — a hidden treasure vault no modern eye has ever seen. Gold beyond imagining. History written in every artifact.<br><br>Your name will echo through centuries.<br><br><em>You are a true Master of the Tomb.</em>',
+    },
+  };
+
+  const e = E[type];
+  const es2 = document.getElementById('ending-screen');
+  es2.innerHTML =
+    '<div class="ending ' + e.cls + '">' +
+    '<div class="end-symbol">' + e.sym + '</div>' +
+    '<h1 class="end-title" style="color:' + e.col + '">' + e.title + '</h1>' +
+    '<div class="end-text">' + e.text + '</div>' +
+    '<div class="end-stats">Time: ' + timeStr + ' &nbsp;|&nbsp; Seals: ' + G.seals.size + '/4 &nbsp;|&nbsp; Wrong actions: ' + G.wrongActions + '</div>' +
+    '<button class="restart-btn" onclick="location.reload()">⟳ Play Again</button>' +
+    '</div>';
+  es2.style.display = 'flex';
+}
+
+// ============================================================
+// INIT & START
+// ============================================================
+
+function startGame() {
+  initState();
+  G.phase = 'playing';
+  G.startTime = Date.now();
+
+  document.getElementById('intro').style.display = 'none';
+  document.getElementById('game').style.display = 'flex';
+
+  G.timerInterval = setInterval(tick, 1000);
+
+  renderSeals();
+  renderClues();
+  goTo('entrance');
+
+  msg('You step into the Pyramid of Anubis. Stone grinds behind you — the entrance seals.', 'curse');
+  msg('"You have 45 minutes before the tomb seals forever." The voice fades into the dark.', 'important');
+  msg('Explore the six chambers. Find the four Sacred Seals. Uncover the way out.', 'info');
+}
+
+function createSandParticles() {
+  const intro = document.getElementById('intro');
+  for (let i = 0; i < 35; i++) {
+    const p = document.createElement('div');
+    p.className = 'sand-p';
+    p.style.left = Math.random() * 100 + '%';
+    p.style.animationDelay = Math.random() * 6 + 's';
+    p.style.animationDuration = (3 + Math.random() * 5) + 's';
+    p.style.opacity = 0.2 + Math.random() * 0.5;
+    intro.appendChild(p);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  createSandParticles();
+  document.getElementById('start-btn').addEventListener('click', startGame);
+});
+</script>
+</body>
+</html>
